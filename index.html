@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>MyDictionary — 用語集</title>
+  <style>
+    body{font-family: "Hiragino Kaku Gothic Pro","Helvetica",sans-serif; margin:20px;}
+    header{display:flex;align-items:center;gap:20px;}
+    .container{max-width:1000px;margin:20px auto;}
+    .controls{display:flex;gap:8px;margin-bottom:16px;}
+    input, textarea{padding:8px;border:1px solid #ccc;border-radius:4px;}
+    button{padding:8px 12px;border-radius:6px;border:1px solid #888;background:#f5f5f5;cursor:pointer;}
+    .row-title{font-size:1.2em;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:6px;}
+    .term{padding:8px; border:1px solid #eee;border-radius:6px;margin:8px 0;display:flex;gap:12px;}
+    .thumb{width:100px;height:80px;object-fit:cover;border-radius:4px;border:1px solid #ddd;}
+    .meta{flex:1;}
+    .word{font-weight:700;font-size:1.05em;}
+    .description{white-space:pre-wrap;margin-top:6px;color:#333;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 MyDictionary — 用語集</h1>
+      <div>
+        <small>五十音で眺める形式。読み(かな)を入力すると精密に並びます。</small>
+      </div>
+    </header>
+
+    <section style="margin-top:12px">
+      <h2>用語を追加</h2>
+      <div class="controls">
+        <input id="word" placeholder="用語 (例: Apple)" />
+        <input id="reading" placeholder="読み（かな・任意、例: りんご）" />
+        <input id="image_url" placeholder="画像URL（任意）" />
+      </div>
+      <div style="margin-top:8px">
+        <textarea id="description" placeholder="説明文（複数行可）" rows="4" style="width:100%"></textarea>
+      </div>
+      <div style="margin-top:8px">
+        <button onclick="addTerm()">追加する</button>
+        <span id="add-result" style="margin-left:12px;color:green"></span>
+      </div>
+    </section>
+
+    <hr/>
+
+    <section>
+      <h2>用語一覧</h2>
+      <p>※ 読みが入力されている場合は読みを優先して並べます。自動読みは今未実装のため、手入力を推奨します。</p>
+      <div id="list"></div>
+    </section>
+  </div>
+
+<script>
+// 五十音（グループの先頭）
+const kanaGroups = ["あ","か","さ","た","な","は","ま","や","ら","わ","その他"];
+
+// 先頭文字を取り出すユーティリティ
+function firstChar(text){
+  if(!text) return "";
+  return text.trim().charAt(0);
+}
+
+// グループ判定（簡易: 先頭のかなの先頭文字で判定）
+function groupKey(ch){
+  if(!ch) return "その他";
+  const a = "あいうえお";
+  const ka = "かきくけこ";
+  const sa = "さしすせそ";
+  const ta = "たちつてと";
+  const na = "なにぬねの";
+  const ha = "はひふへほ";
+  const ma = "まみむめも";
+  const ya = "やゆよ";
+  const ra = "らりるれろ";
+  const wa = "わをん";
+  if(a.includes(ch)) return "あ";
+  if(ka.includes(ch)) return "か";
+  if(sa.includes(ch)) return "さ";
+  if(ta.includes(ch)) return "た";
+  if(na.includes(ch)) return "な";
+  if(ha.includes(ch)) return "は";
+  if(ma.includes(ch)) return "ま";
+  if(ya.includes(ch)) return "や";
+  if(ra.includes(ch)) return "ら";
+  if(wa.includes(ch)) return "わ";
+  return "その他";
+}
+
+async function loadTerms(){
+  const res = await fetch('/terms');
+  const terms = await res.json();
+  renderTerms(terms);
+}
+
+// 描画: グループ化して表示
+function renderTerms(terms){
+  // terms は既にサーバ側でソートしている想定（reading優先）
+  const groups = {};
+  kanaGroups.forEach(k => groups[k] = []);
+  groups["その他"] = [];
+  terms.forEach(t => {
+    // 使う文字は、reading の先頭（存在すれば）それ以外は word の先頭
+    const source = (t.reading && t.reading.trim()) ? t.reading.trim() : t.word.trim();
+    const ch = firstChar(source);
+    const key = groupKey(ch);
+    groups[key].push(t);
+  });
+
+  // DOM に描画
+  const container = document.getElementById('list');
+  container.innerHTML = '';
+  for(const k of kanaGroups){
+    const items = groups[k] || [];
+    if(items.length === 0) continue;
+    const section = document.createElement('div');
+    const title = document.createElement('div');
+    title.className = 'row-title';
+    title.textContent = k + " 行";
+    section.appendChild(title);
+    items.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'term';
+      const imgWrap = document.createElement('div');
+      if(t.image_url){
+        const img = document.createElement('img');
+        img.src = t.image_url;
+        img.className = 'thumb';
+        imgWrap.appendChild(img);
+      }
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const w = document.createElement('div');
+      w.className = 'word';
+      w.textContent = t.word + (t.reading ? ("（" + t.reading + "）") : "");
+      const d = document.createElement('div');
+      d.className = 'description';
+      d.textContent = t.description;
+      meta.appendChild(w);
+      meta.appendChild(d);
+      el.appendChild(imgWrap);
+      el.appendChild(meta);
+      section.appendChild(el);
+    });
+    container.appendChild(section);
+  }
+}
+
+// 追加処理（JSON POST）
+async function addTerm(){
+  const word = document.getElementById('word').value.trim();
+  const reading = document.getElementById('reading').value.trim();
+  const image_url = document.getElementById('image_url').value.trim();
+  const description = document.getElementById('description').value.trim();
+  if(!word || !description){
+    alert("用語と説明文は必須です。");
+    return;
+  }
+  const payload = { word, reading: reading || null, image_url: image_url || null, description };
+  const res = await fetch('/add_term', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(res.ok){
+    document.getElementById('add-result').textContent = data.message;
+    // フィールドを空にして一覧を再取得
+    document.getElementById('word').value = '';
+    document.getElementById('reading').value = '';
+    document.getElementById('image_url').value = '';
+    document.getElementById('description').value = '';
+    setTimeout(()=> document.getElementById('add-result').textContent = '', 3000);
+    await loadTerms();
+  } else {
+    alert(data.detail || data.message || "追加に失敗しました");
+  }
+}
+
+// 初回ロード
+loadTerms();
+</script>
+</body>
+</html>
