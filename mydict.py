@@ -1,16 +1,24 @@
 # mydict.py
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import Optional, List
+from collections import defaultdict
+from fastapi.staticfiles import StaticFiles
+
+
 
 # =====================
 # DB セットアップ
 # =====================
 # SQLite ファイルを作成 (relative path: ./dictionary.db)
 DATABASE_URL = "sqlite:///./dictionary.db"
+
 
 # create_engine: DB 接続を表すオブジェクトを作る
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -39,6 +47,8 @@ Base.metadata.create_all(bind=engine)
 # FastAPI アプリ本体
 # =====================
 app = FastAPI(title="MyDictionary (Terms)")
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Pydantic 用のスキーマ（受け取り／返却用）
 class TermCreate(BaseModel):
@@ -70,6 +80,10 @@ def get_session():
 def read_root():
     return {"message": "Welcome to MyDictionary (Terms) API"}
 
+@app.get("/add", response_class=HTMLResponse)
+def add_page(request: Request):
+    return templates.TemplateResponse("add.html", {"request": request})
+
 @app.post("/add_term", response_model=dict)
 def add_term(item: TermCreate):
     """
@@ -96,31 +110,54 @@ def add_term(item: TermCreate):
     finally:
         session.close()
 
-@app.get("/terms", response_model=List[TermOut])
-def list_terms():
+@app.get("/terms")
+def get_terms():
     """
-    全用語を返す。フロント側で五十音順に整列／グループ化する想定。
-    サーバー側で reading があれば reading を使って昇順に、なければ word で昇順ソートする。
+    全用語を五十音順グループで返す。
     """
     session = SessionLocal()
     try:
-        # DB内での初期ソート: reading（あれば）→ word
         terms = session.query(Term).all()
-        # Python 側でソート（reading優先、Noneはwordで代替）
-        def sort_key(t: Term):
-            key = t.reading if t.reading and t.reading.strip() else t.word
-            return key
-        terms_sorted = sorted(terms, key=sort_key)
-        return [
-            TermOut(
-                id=t.id,
-                word=t.word,
-                reading=t.reading,
-                description=t.description,
-                image_url=t.image_url,
-            )
-            for t in terms_sorted
-        ]
+
+        grouped = defaultdict(list)
+        for term in terms:
+            if not term.reading:
+                group = "その他"
+            else:
+                first_char = term.reading[0]
+                if first_char in "あいうえお":
+                    group = "あ行"
+                elif first_char in "かきくけこがぎぐげご":
+                    group = "か行"
+                elif first_char in "さしすせそざじずぜぞ":
+                    group = "さ行"
+                elif first_char in "たちつてとだぢづでど":
+                    group = "た行"
+                elif first_char in "なにぬねの":
+                    group = "な行"
+                elif first_char in "はひふへほばびぶべぼぱぴぷぺぽ":
+                    group = "は行"
+                elif first_char in "まみむめも":
+                    group = "ま行"
+                elif first_char in "やゆよ":
+                    group = "や行"
+                elif first_char in "らりるれろ":
+                    group = "ら行"
+                elif first_char in "わをん":
+                    group = "わ行"
+                else:
+                    group = "その他"
+            grouped[group].append({
+                "word": term.word,
+                "reading": term.reading,
+                "description": term.description,
+                "image_url": term.image_url
+            })
+
+        order = ["あ行","か行","さ行","た行","な行","は行","ま行","や行","ら行","わ行","その他"]
+        sorted_grouped = {g: grouped[g] for g in order if g in grouped}
+
+        return sorted_grouped
     finally:
         session.close()
 
@@ -145,6 +182,11 @@ def get_term(term_id: int):
 # HTML を返すエンドポイント（ブラウザ用）
 # ---------------------
 @app.get("/web", response_class=HTMLResponse)
-def serve_web():
-    with open("index.html", "r", encoding="utf-8") as f:
-        return f.read()
+def show_terms_page(request: Request):
+    """
+    用語一覧をHTMLで表示する
+    """
+    session = SessionLocal()
+    terms = session.query(Term).order_by(Term.word).all()
+    session.close()
+    return templates.TemplateResponse("index.html", {"request": request, "terms": terms})

@@ -1,0 +1,134 @@
+/* 全体の雰囲気を柔らかく */
+body {
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "Noto Sans JP" sans-serif;
+    background-color: #fff8f8;
+    color: #444;
+    margin: 0;
+    padding: 0;
+}
+
+/* 中央寄せのカード風レイアウト */
+.container {
+    max-width: 750px;
+    margin: 40px auto;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(255, 182, 193, 0.2);
+    padding: 30px;
+}
+
+/* タイトル */
+h1 {
+    text-align: center;
+    color: #ff6f91;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+/* テーブルデザイン */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th {
+    background-color: #ffe0eb;
+    color: #555;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ffeef3;
+}
+
+tr:hover {
+    background-color: #fff0f5;
+}
+
+/* リンク */
+a {
+    color: #ff6f91;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ボタン */
+button,
+input[type="submit"] {
+    background-color: #ff9eb5;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover,
+input[type="submit"]:hover {
+    background-color: #ff7b9c;
+    transform: scale(1.03);
+}
+
+/* フォーム */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+input[type="text"],
+textarea {
+    padding: 10px;
+    border: 1px solid #ffd5e0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* 画像プレビュー */
+img {
+    max-width: 100px;
+    border-radius: 6px;
+    margin-top: 5px;
+    box-shadow: 0 2px 4px rgba(255, 182, 193, 0.4);
+}
+
+/* フッター */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+/* 「＋用語を追加する」リンクをボタン風に */
+a.add-button {
+    display: inline-block;
+    background-color: #ff9eb5;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+a.add-button:hover {
+    background-color: #ff7b9c;
+    transform: scale(1.03);
+}

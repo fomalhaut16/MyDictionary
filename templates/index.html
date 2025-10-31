@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>MyDictionary（用語一覧）</title>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            text-align: center;
+        }
+        .term {
+            background: white;
+            border-radius: 8px;
+            padding: 1em;
+            margin-bottom: 1em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .term img {
+            max-width: 150px;
+            max-height: 150px;
+            display: block;
+            margin-top: 0.5em;
+        }
+        .add-link {
+            display: inline-block;
+            margin-bottom: 1em;
+            background: #007bff;
+            color: white;
+            padding: 0.6em 1em;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+        .add-link:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>MyDictionary 用語集</h1>
+    <a href="/add" class="add-button">＋ 新しい用語を追加</a>
+
+    {% if terms %}
+        {% for term in terms %}
+            <div class="term">
+                <h2>{{ term.word }}</h2>
+                {% if term.reading %}
+                    <p><em>読み: {{ term.reading }}</em></p>
+                {% endif %}
+                <p>{{ term.description }}</p>
+                {% if term.image_url %}
+                    <img src="{{ term.image_url }}" alt="{{ term.word }}">
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>まだ登録された用語はありません。</p>
+    {% endif %}
+</body>
+</html>
