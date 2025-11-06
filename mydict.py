@@ -10,15 +10,13 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from typing import Optional, List
 from collections import defaultdict
 from fastapi.staticfiles import StaticFiles
+import os
 
-
-
-# =====================
-# DB セットアップ
-# =====================
-# SQLite ファイルを作成 (relative path: ./dictionary.db)
-DATABASE_URL = "sqlite:///./dictionary.db"
-
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./terms.db")
+if "sqlite" in DATABASE_URL:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
 # create_engine: DB 接続を表すオブジェクトを作る
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
