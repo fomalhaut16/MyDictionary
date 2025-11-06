@@ -2,7 +2,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi import Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import RedirectResponse
+from fastapi import Form
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Text
@@ -21,7 +22,7 @@ if DATABASE_URL.startswith("sqlite:///"):
     )
 else:
     engine = create_engine(DATABASE_URL)
-    
+
 # sessionmaker: DB セッションを作るためのファクトリ
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
@@ -185,3 +186,39 @@ def serve_web(request: Request, q: Optional[str] = Query(None)):
         return templates.TemplateResponse("index.html", {"request": request, "terms": terms_sorted, "q": q})
     finally:
         session.close()
+
+# 編集ページ表示
+@app.get("/edit/{term_id}", response_class=HTMLResponse)
+def edit_term_page(request: Request, term_id: int):
+    db = SessionLocal()
+    term = db.query(Term).filter(Term.id == term_id).first()
+    db.close()
+    if not term:
+        raise HTTPException(status_code=404, detail="Term not found")
+    return templates.TemplateResponse("edit.html", {"request": request, "term": term})
+
+# 編集内容の更新
+@app.post("/update/{term_id}")
+async def update_term(term_id: int, request: Request):
+    form = await request.form()
+    word = form.get("word")
+    reading = form.get("reading")
+    description = form.get("description")
+    image_url = form.get("image_url")
+
+    db = SessionLocal()
+    term = db.query(Term).filter(Term.id == term_id).first()
+    if not term:
+        db.close()
+        raise HTTPException(status_code=404, detail="Term not found")
+
+    term.word = word
+    term.reading = reading
+    term.description = description
+    term.image_url = image_url
+
+    db.commit()
+    db.close()
+
+    # 一覧ページに戻る（正しいURLに）
+    return RedirectResponse(url="/web", status_code=303)

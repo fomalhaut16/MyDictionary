@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>単語を編集 | MyDictionary</title>
+    <link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body class="edit-page">
+<div class="container">
+    <h1>単語を編集</h1>
+
+    <form action="/update/{{ term.id }}" method="post" class="edit-form">
+        <label>単語:</label>
+        <input type="text" name="word" value="{{ term.word }}" required>
+
+        <label>読み:</label>
+        <input type="text" name="reading" value="{{ term.reading or '' }}">
+
+        <label>説明:</label>
+        <textarea name="description" rows="4" required>{{ term.description }}</textarea>
+
+        <label>画像URL:</label>
+        <input type="url" name="image_url" value="{{ term.image_url or '' }}">
+
+        <button type="submit" class="save-button">保存</button>
+    </form>
+
+    <a href="/web" class="back-button">← 一覧に戻る</a>
+</div>
+</body>
+</html>

@@ -132,3 +132,131 @@ a.add-button:hover {
     background-color: #ff7b9c;
     transform: scale(1.03);
 }
+
+body {
+    font-family: sans-serif;
+    margin: 2em;
+    background-color: #f7f7f7;
+}
+h1 {
+    text-align: center;
+}
+.term {
+    position:relative;
+    background: white;
+    border-radius: 8px;
+    padding: 1em;
+    margin-bottom: 1em;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.term img {
+    max-width: 150px;
+    max-height: 150px;
+    display: block;
+    margin-top: 0.5em;
+}
+.add-link {
+    display: inline-block;
+    margin-bottom: 1em;
+    background: #007bff;
+    color: white;
+    padding: 0.6em 1em;
+    border-radius: 6px;
+    text-decoration: none;
+}
+.add-link:hover {
+    background: #0056b3;
+}
+.edit-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #9be2b2; /* やさしいパステルグリーン */
+    color: white;
+    padding: 0.3em 0.5em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.edit-button:hover {
+    background: #7ed9a2; /* 少し濃いグリーンに */
+    transform: scale(1.05); /* ちょっと大きく */
+}
+
+body.edit-page {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background-color: #f4f9f4;
+    color: #333;
+    margin: 2em;
+}
+
+.edit-page .container {
+    max-width: 600px;
+    margin: auto;
+    background: #fff;
+    padding: 2em;
+    border-radius: 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit-page h1 {
+    text-align: center;
+    color: #2d6a4f;
+    margin-bottom: 1.5em;
+}
+
+.edit-form label {
+    display: block;
+    margin-top: 1em;
+    font-weight: 500;
+}
+
+.edit-form input,
+.edit-form textarea {
+    width: 100%;
+    margin-top: 0.5em;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.edit-form input:focus,
+.edit-form textarea:focus {
+    border-color: #80bfa5;
+    box-shadow: 0 0 4px rgba(128, 191, 165, 0.4);
+    outline: none;
+}
+
+.save-button {
+    margin-top: 1.5em;
+    background-color: #80ed99;
+    color: #fff;
+    border: none;
+    padding: 0.7em 1.5em;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.save-button:hover {
+    background-color: #57cc99;
+    transform: translateY(-1px);
+}
+
+.back-button {
+    display: inline-block;
+    margin-top: 1.2em;
+    text-decoration: none;
+    color: #40916c;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.back-button:hover {
+    color: #2d6a4f;
+}
