@@ -110,54 +110,44 @@ def add_term(item: TermCreate):
     finally:
         session.close()
 
-@app.get("/terms")
-def get_terms():
+from fastapi import Query
+
+@app.get("/terms", response_model=List[TermOut])
+def list_terms(query: str | None = Query(None)):
     """
-    全用語を五十音順グループで返す。
+    全用語を返す。
+    ?query= で検索キーワードが指定された場合は部分一致でフィルタ。
     """
     session = SessionLocal()
     try:
         terms = session.query(Term).all()
 
-        grouped = defaultdict(list)
-        for term in terms:
-            if not term.reading:
-                group = "その他"
-            else:
-                first_char = term.reading[0]
-                if first_char in "あいうえお":
-                    group = "あ行"
-                elif first_char in "かきくけこがぎぐげご":
-                    group = "か行"
-                elif first_char in "さしすせそざじずぜぞ":
-                    group = "さ行"
-                elif first_char in "たちつてとだぢづでど":
-                    group = "た行"
-                elif first_char in "なにぬねの":
-                    group = "な行"
-                elif first_char in "はひふへほばびぶべぼぱぴぷぺぽ":
-                    group = "は行"
-                elif first_char in "まみむめも":
-                    group = "ま行"
-                elif first_char in "やゆよ":
-                    group = "や行"
-                elif first_char in "らりるれろ":
-                    group = "ら行"
-                elif first_char in "わをん":
-                    group = "わ行"
-                else:
-                    group = "その他"
-            grouped[group].append({
-                "word": term.word,
-                "reading": term.reading,
-                "description": term.description,
-                "image_url": term.image_url
-            })
+        # 検索フィルター
+        if query:
+            query_lower = query.lower()
+            terms = [
+                t for t in terms
+                if query_lower in (t.word.lower() if t.word else "")
+                or query_lower in (t.reading.lower() if t.reading else "")
+                or query_lower in (t.description.lower() if t.description else "")
+            ]
 
-        order = ["あ行","か行","さ行","た行","な行","は行","ま行","や行","ら行","わ行","その他"]
-        sorted_grouped = {g: grouped[g] for g in order if g in grouped}
+        # ソート（読み→単語順）
+        def sort_key(t: Term):
+            key = t.reading if t.reading and t.reading.strip() else t.word
+            return key
+        terms_sorted = sorted(terms, key=sort_key)
 
-        return sorted_grouped
+        return [
+            TermOut(
+                id=t.id,
+                word=t.word,
+                reading=t.reading,
+                description=t.description,
+                image_url=t.image_url,
+            )
+            for t in terms_sorted
+        ]
     finally:
         session.close()
 
@@ -182,11 +172,17 @@ def get_term(term_id: int):
 # HTML を返すエンドポイント（ブラウザ用）
 # ---------------------
 @app.get("/web", response_class=HTMLResponse)
-def show_terms_page(request: Request):
-    """
-    用語一覧をHTMLで表示する
-    """
+def serve_web(request: Request, q: Optional[str] = Query(None)):
     session = SessionLocal()
-    terms = session.query(Term).order_by(Term.word).all()
-    session.close()
-    return templates.TemplateResponse("index.html", {"request": request, "terms": terms})
+    try:
+        # 全件 or 検索条件で絞り込み
+        if q:
+            terms = session.query(Term).filter(Term.word.contains(q) | Term.description.contains(q)).all()
+        else:
+            terms = session.query(Term).all()
+
+        # ソート（読み→単語）
+        terms_sorted = sorted(terms, key=lambda t: t.reading or t.word)
+        return templates.TemplateResponse("index.html", {"request": request, "terms": terms_sorted, "q": q})
+    finally:
+        session.close()

@@ -43,6 +43,14 @@
 </head>
 <body>
     <h1>MyDictionary 用語集</h1>
+
+    <form method="get" action="/web" style="margin-bottom: 1rem;">
+      <input type="text" name="q" value="{{ q or '' }}" placeholder="キーワードで検索" />
+      <button type="submit">検索</button>
+      <a href="/web"><button type="button">クリア</button></a>
+    </form>
+
+
     <a href="/add" class="add-button">＋ 新しい用語を追加</a>
 
     {% if terms %}
